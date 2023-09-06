@@ -1,0 +1,41 @@
+name: (6425) 測試自動發文
+
+on:
+  workflow_dispatch:
+  schedule:
+    # timezone: UTC
+    - cron: '1 0 * * *'
+
+jobs:
+  deploy:
+    environment: series-6425
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+    - name: 印出收到的參數
+      run: |
+        echo 'env=${{ toJSON(env) }}'
+        echo 'github=${{ toJSON(github) }}'
+        echo 'inputs=${{ toJSON(inputs) }}'
+        echo 'job=${{ toJSON(job) }}'
+        echo 'runner=${{ toJSON(runner) }}'
+        echo 'secrets=${{ toJSON(secrets) }}'
+        echo 'steps=${{ toJSON(steps) }}'
+        echo 'vars=${{ toJSON(vars) }}'
+    - uses: actions/checkout@v3
+    - name: 安裝 Node.js 與 yarn
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+        cache: 'yarn'
+    - name: 建立環境、檢查及自動發文
+      run: |
+        yarn
+        yarn lint
+        yarn ironman
+      env:
+        IRONMAN_ID: ${{ vars.IRONMAN_ID }}
+        ARTICLE_CSV: ${{ secrets.ARTICLE_CSV }}
+        IRONMAN_TOKEN: ${{ secrets.IRONMAN_TOKEN }}
+        ITHELP_COOKIE: ${{ secrets.ITHELP_COOKIE }}
+        LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
