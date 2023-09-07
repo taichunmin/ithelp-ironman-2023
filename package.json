@@ -13,7 +13,8 @@
     "json5": "^2.2.3",
     "lodash": "^4.17.21",
     "papaparse": "^5.4.1",
-    "qs": "^6.11.2"
+    "qs": "^6.11.2",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "eslint": "^8.48.0",

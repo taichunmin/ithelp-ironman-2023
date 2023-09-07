@@ -4,11 +4,14 @@ on:
   workflow_dispatch:
   schedule:
     # timezone: UTC
-    - cron: '1 0 * * *'
+    # 避開整點時間，因為有可能會有時間上的延誤
+    - cron: '21 0 * * *'
 
 jobs:
   deploy:
-    environment: series-6425
+    environment:
+      name: series-6425
+      url: https://ithelp.ithome.com.tw/users/20077241/ironman/${{ vars.IRONMAN_ID }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -28,11 +31,17 @@ jobs:
       with:
         node-version: 20
         cache: 'yarn'
-    - name: 建立環境、檢查及自動發文
+    - name: 建立環境及檢查
       run: |
         yarn
         yarn lint
-        yarn ironman
+    - name: 自動發文
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 600
+        max_attempts: 3
+        retry_on: error
+        command: yarn ironman
       env:
         IRONMAN_ID: ${{ vars.IRONMAN_ID }}
         ARTICLE_CSV: ${{ secrets.ARTICLE_CSV }}

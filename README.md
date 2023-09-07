@@ -38,7 +38,7 @@ index,date,subject,tags,description
 
 ![](https://i.imgur.com/9VIIHez.png)
 
-### 設定 Github Actions
+### 設定 Github Repo
 
 * Fork 這個專案
 * 前往 Environments 建立一個新的 environment，如：`series-6425`
@@ -51,3 +51,8 @@ index,date,subject,tags,description
   * `LINE_NOTIFY_TOKEN`
 
 ![](https://i.imgur.com/FwQiRH6.png)
+
+### 設定 Github Actions
+
+複製並修改 `.github/workflows` 中的檔案，調整想要自動發文的時間、`seriesId` 及名稱。
+
