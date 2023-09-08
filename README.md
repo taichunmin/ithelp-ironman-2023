@@ -36,7 +36,10 @@ index,date,subject,tags,description
 這裡是內文"
 ```
 
-這是均民準備的 Google Sheets 可供參考: <https://docs.google.com/spreadsheets/d/1ijAwcXxCoRgLKj-ZaM32oYwI8Sx9tg2pwOiYY7Ml1z0/edit?usp=sharing>
+以下是均民準備的 Google Sheets 範例可供參考:
+
+1. <https://docs.google.com/spreadsheets/d/1ijAwcXxCoRgLKj-ZaM32oYwI8Sx9tg2pwOiYY7Ml1z0/edit?usp=sharing>
+2. <https://docs.google.com/spreadsheets/d/1TUEEneDcKcDtgdbLOsoz3BYThVtJovnWi6WZ7iH-yyA/edit?usp=sharing>
 
 ### 透過 開發者工具 查詢出發文所需的資料
 
