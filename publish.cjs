@@ -20,14 +20,23 @@ exports.getenv = (key, defaultval) => {
 }
 
 // https://ithelp.ithome.com.tw/articles/10191096
-const ITHELP_COOKIE = exports.getenv('ITHELP_COOKIE')
-const IRONMAN_ID = exports.getenv('IRONMAN_ID')
-const IRONMAN_TOKEN = exports.getenv('IRONMAN_TOKEN')
-const ARTICLE_CSV = exports.getenv('ARTICLE_CSV')
+let cfg = {
+  ITHELP_COOKIE: exports.getenv('ITHELP_COOKIE'),
+  IRONMAN_ID: exports.getenv('IRONMAN_ID'),
+  IRONMAN_TOKEN: exports.getenv('IRONMAN_TOKEN'),
+  ARTICLE_CSV: exports.getenv('ARTICLE_CSV'),
+}
+
+const joiCfg = Joi.object({
+  ITHELP_COOKIE: Joi.string().trim().empty('').required(),
+  IRONMAN_ID: Joi.number().min(1).required(),
+  IRONMAN_TOKEN: Joi.string().trim().empty('').required(),
+  ARTICLE_CSV: Joi.string().trim().uri({ scheme: ['http', 'https'] }).empty('').required(),
+})
 
 const articleSchema = Joi.object({
   date: Joi.string().empty('').pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
-  subject: Joi.string().empty('').required().min(1),
+  subject: Joi.string().empty('').min(1).required(),
   tags: Joi.array().items(Joi.string().trim().empty()).unique().min(1),
   description: Joi.string().empty().min(300).required(),
 })
@@ -42,8 +51,8 @@ exports.articleValidate = article => articleSchema.validateAsync(article, { stri
 exports.main = async (data, context) => {
   let article
   try {
-    if (!_.isString(ARTICLE_CSV) || ARTICLE_CSV.length < 1) throw new Error(`invalid ARTICLE_CSV = ${ARTICLE_CSV}`)
-    const articles = await exports.getCsv(ARTICLE_CSV)
+    cfg = await joiCfg.validateAsync(cfg, { stripUnknown: true })
+    const articles = await exports.getCsv(cfg.ARTICLE_CSV)
     console.log(`成功取得文章列表, count = ${articles.length}`)
     const today = exports.todayStr()
     article = _.find(articles, { date: today })
@@ -54,8 +63,7 @@ exports.main = async (data, context) => {
     article.tags = exports.parseJsonOrDefault(article?.tags, [])
     article = await exports.articleValidate(article)
     console.log(`成功取得文章內容, date = ${article.date}, subject = ${article.subject}`)
-    if (!_.isString(IRONMAN_ID) || IRONMAN_ID.length < 1) throw new Error(`invalid IRONMAN_ID = ${IRONMAN_ID}`)
-    if (await exports.isArticlePublished(IRONMAN_ID, today)) {
+    if (await exports.isArticlePublished(cfg.IRONMAN_ID, today)) {
       console.log(`今天已經發過文章了, date = ${today}`)
       return
     }
@@ -72,13 +80,12 @@ exports.main = async (data, context) => {
 }
 
 exports.createArticle = async () => {
-  if (!_.isString(ITHELP_COOKIE) || ITHELP_COOKIE.length < 1) throw new Error(`invalid ITHELP_COOKIE = ${ITHELP_COOKIE}`)
-  const res = await axios.get(`https://ithelp.ithome.com.tw/2023ironman/create/${IRONMAN_ID}`, {
+  const res = await axios.get(`https://ithelp.ithome.com.tw/2023ironman/create/${cfg.IRONMAN_ID}`, {
     maxRedirects: 0,
     validateStatus: status => status === 302,
     headers: {
       ...sharedHeaders,
-      Cookie: ITHELP_COOKIE,
+      Cookie: cfg.ITHELP_COOKIE,
       Referer: 'https://ithelp.ithome.com.tw/',
     },
   })
@@ -86,9 +93,8 @@ exports.createArticle = async () => {
 }
 
 exports.publishArticle = async (articleId, article) => {
-  if (!_.isString(ITHELP_COOKIE) || ITHELP_COOKIE.length < 1) throw new Error(`invalid ITHELP_COOKIE = ${ITHELP_COOKIE}`)
   return await axios.post(`https://ithelp.ithome.com.tw/articles/${articleId}/publish`, exports.httpBuildQuery({
-    _token: IRONMAN_TOKEN,
+    _token: cfg.IRONMAN_TOKEN,
     _method: 'PUT',
     subject: article.subject,
     description: article.description,
@@ -96,7 +102,7 @@ exports.publishArticle = async (articleId, article) => {
   }), {
     headers: {
       ...sharedHeaders,
-      Cookie: ITHELP_COOKIE,
+      Cookie: cfg.ITHELP_COOKIE,
     },
   })
 }
