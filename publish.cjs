@@ -38,7 +38,7 @@ const articleSchema = Joi.object({
   date: Joi.string().empty('').pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
   subject: Joi.string().empty('').min(1).required(),
   tags: Joi.array().items(Joi.string().trim().empty()).unique().min(1),
-  description: Joi.string().empty().min(300).required(),
+  description: Joi.string().empty().min(1).required(),
 })
 
 const sharedHeaders = {
