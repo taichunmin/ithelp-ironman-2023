@@ -156,7 +156,7 @@ exports.errToJson = (() => {
 })()
 
 exports.sendLineNotify = async msg => {
-  const token = exports.getenv('LINE_NOTIFY_TOKEN')
+  const token = _.trim(exports.getenv('LINE_NOTIFY_TOKEN'))
   try {
     if (!_.isString(token) || token.length < 1) throw new Error(`invalid LINE_NOTIFY_TOKEN = ${token}`)
     const body = exports.httpBuildQuery({ message: `\n${msg}` })
@@ -193,15 +193,25 @@ exports.xml2js = xml => xmljs.xml2js(xml, {
 
 exports.isArticlePublished = async (seriesId, date) => {
   try {
+    // 先從 RSS 取得文章列表的網址
     const rss = exports.xml2js((await axios.get(`https://ithelp.ithome.com.tw/rss/series/${seriesId}`, {
       headers: sharedHeaders,
     }))?.data)
     // console.log(JSON5.stringify(rss))
     const userLink = _.get(rss, 'rss.channel.link._text')
     // console.log(`userLink = ${userLink}`)
-    const htmlSerial = (await axios.get(`${userLink}/${seriesId}`, {
+
+    // 從文章列表抓到目前有多少文章
+    let htmlSerial = (await axios.get(`${userLink}/${seriesId}`, {
       headers: sharedHeaders,
     }))?.data
+    const articleCnt = _.parseInt(htmlSerial.match(/<span>共 (\d+) 篇文章 ｜<\/span>/)?.[1])
+    console.log(`該系列的文章數量 = ${articleCnt}`)
+    if (articleCnt > 10) { // 超過 10 篇文章，要換頁
+      htmlSerial = (await axios.get(`${userLink}/${seriesId}?page=${Math.trunc((articleCnt + 9) / 10)}`, {
+        headers: sharedHeaders,
+      }))?.data
+    }
     // console.log(JSON5.stringify(htmlSerial))
     return _.some([...htmlSerial.matchAll(/qa-list__info-time">(\d{4}-\d{2}-\d{2})</g)], match => match[1] === date)
   } catch (err) {
