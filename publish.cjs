@@ -21,24 +21,26 @@ exports.getenv = (key, defaultval) => {
 
 // https://ithelp.ithome.com.tw/articles/10191096
 let cfg = {
-  ITHELP_COOKIE: exports.getenv('ITHELP_COOKIE'),
+  ARTICLE_CSV: exports.getenv('ARTICLE_CSV'),
   IRONMAN_ID: exports.getenv('IRONMAN_ID'),
   IRONMAN_TOKEN: exports.getenv('IRONMAN_TOKEN'),
-  ARTICLE_CSV: exports.getenv('ARTICLE_CSV'),
+  ITHELP_COOKIE: exports.getenv('ITHELP_COOKIE'),
+  year: dayjs().year(),
 }
 
 const joiCfg = Joi.object({
-  ITHELP_COOKIE: Joi.string().trim().empty('').required(),
+  ARTICLE_CSV: Joi.string().trim().uri({ scheme: ['http', 'https'] }).empty('').required(),
   IRONMAN_ID: Joi.number().min(1).required(),
   IRONMAN_TOKEN: Joi.string().trim().empty('').required(),
-  ARTICLE_CSV: Joi.string().trim().uri({ scheme: ['http', 'https'] }).empty('').required(),
+  ITHELP_COOKIE: Joi.string().trim().empty('').required(),
+  year: Joi.number().min(2008).required(),
 })
 
 const articleSchema = Joi.object({
   date: Joi.string().empty('').pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
-  subject: Joi.string().empty('').min(1).required(),
+  subject: Joi.string().trim().empty('').min(1).required(),
   tags: Joi.array().items(Joi.string().trim().empty()).unique().min(1),
-  description: Joi.string().empty().min(1).required(),
+  description: Joi.string().trim().empty('').min(1).required(),
 })
 
 const sharedHeaders = {
@@ -80,16 +82,22 @@ exports.main = async (data, context) => {
 }
 
 exports.createArticle = async () => {
-  const res = await axios.get(`https://ithelp.ithome.com.tw/2023ironman/create/${cfg.IRONMAN_ID}`, {
-    maxRedirects: 0,
-    validateStatus: status => status === 302,
-    headers: {
-      ...sharedHeaders,
-      Cookie: cfg.ITHELP_COOKIE,
-      Referer: 'https://ithelp.ithome.com.tw/',
-    },
-  })
-  return res.data.match(/articles\/(.+)\/draft/)[1]
+  const trace = {}
+  try {
+    trace.url = `https://ithelp.ithome.com.tw/${cfg.year}ironman/create/${cfg.IRONMAN_ID}`
+    const res = await axios.get(trace.url, {
+      maxRedirects: 0,
+      validateStatus: status => status === 302,
+      headers: {
+        ...sharedHeaders,
+        Cookie: cfg.ITHELP_COOKIE,
+        Referer: 'https://ithelp.ithome.com.tw/',
+      },
+    })
+    return res.data.match(/articles\/(.+)\/draft/)[1]
+  } catch (err) {
+    throw _.update(err, 'data.createArticle', orig => orig ?? trace)
+  }
 }
 
 exports.publishArticle = async (articleId, article) => {
@@ -98,7 +106,7 @@ exports.publishArticle = async (articleId, article) => {
     _method: 'PUT',
     subject: article.subject,
     description: article.description,
-    tags: ['15th鐵人賽', ...article.tags],
+    tags: [`${cfg.year - 2008}th鐵人賽`, ...article.tags],
   }), {
     headers: {
       ...sharedHeaders,

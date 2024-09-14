@@ -1,11 +1,11 @@
-name: (6245) 用 Web Serial/Bluetooth 來控制 ChameleonUltra 硬體
+name: (7422) 免安裝！一起用 JS 來控制開源的 NFC 讀卡機變色龍吧！
 
 on:
   workflow_dispatch:
   schedule:
     # timezone: UTC
     # 避開整點時間，因為有可能會有時間上的延誤
-    # - cron: '21 0 * * *'
+    - cron: '21 0 * * *'
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
     if: github.repository_owner == 'taichunmin'
     environment:
       # 這個名字必須跟 repo 的 Environments 名稱一樣
-      name: series-6245
+      name: series-7422
       # 網址中間有鐵人賽使用者 ID，請改成自己的
       url: https://ithelp.ithome.com.tw/users/20077241/ironman/${{ vars.IRONMAN_ID }}
     runs-on: ubuntu-latest
