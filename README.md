@@ -1,3 +1,6 @@
+> [!CAUTION]
+> 由於 iThome 鐵人賽已加上 reCAPTCHA 保護，所以這個工具已無法使用。
+
 # 2023 iThome鐵人賽 自動發文機器人
 
 - 可手動執行
